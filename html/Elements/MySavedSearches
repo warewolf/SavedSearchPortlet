@@ -1,0 +1,38 @@
+<&|/Widgets/TitleBox, title => loc('My Saved Searches') &>
+<i>They'll be clickable soon!</i>
+% foreach my $object (@Objects) {
+% if (ref($object) eq 'RT::User' && $object->id == $session{'CurrentUser'}->Id) {
+<&|/l&>My saved searches</&></option>
+% } else {
+<&|/l, $object->Name&>[_1]'s saved searches</&>
+% }
+<ul>
+<%perl>
+ my @searches = $object->Attributes->Named('SavedSearch');
+ foreach my $search (@searches) { 
+
+    my %query = ( Query         => $search->SubValue('Query'),
+                  Order         => $search->SubValue('Order'),
+                  OrderBy       => $search->SubValue('OrderBy'),
+                  Format        => $search->SubValue('Format'),
+                  RowsPerPage   => $search->SubValue('RowsPerPage'),
+                  SavedSearchId => ref($object) . "-"
+                      . $object->id
+                      . "-SavedSearch-"
+                      . $search->id
+                );
+
+ my $QueryString = $m->comp('/Elements/QueryString', %query );
+</%perl>
+<li><a href="<%RT->Config->Get('WebPath')%>/Search/Results.html?<%$QueryString%>"><%$search->Description||loc('Unnamed search')%> - id <%$search->id%></a>
+
+</li>
+
+% }
+</ul>
+% }
+</&>
+<%init>
+my @Objects = RT::SavedSearches->new($session{CurrentUser})->_PrivacyObjects;
+
+</%init>
